@@ -1,67 +1,67 @@
-(function(doc){
+(function(){
 
-    var filters = ['India', 'Pakistan'];
-    var container;
-    var extensionName = 'UpworkCleaner';
+    const FILTERS = ['India', 'Pakistan'],
+        POPUP_VISIBILITY_DURATION = 3000,
+        EXTENSION_NAME = 'UpworkCleaner',
+        CHECKED_JOB_COLOR = '#eee';
 
-    function returnParentSection(elem){
+    let container;
+
+    function cleanOnFirstLoad(){
         if(!container){
             return;
         }
-        while(elem !== container && elem.tagName !=='SECTION'){
-            elem = elem.parentNode;
-        }
-        return elem;
-    }
-
-    function clean(){
-        if(!container){
-            return;
-        }
-        var elements = container.querySelectorAll('section .client-location');
-        var counter = 0;
-        for(var i = 0; i< elements.length; i++){
-            if( filters.indexOf(elements[i].textContent) >= 0 ){
-                returnParentSection(elements[i], container).style.display = 'none';
+        const sections = Array.from(container.querySelectorAll('section')),
+            array = sections.map(elem => {return {elem, location: elem.querySelector('.client-location')};});
+        let counter = 0;
+        for(let item of array){
+            if( item.location && FILTERS.indexOf(item.location.textContent) >= 0 ){
+                item.elem.style.display = 'none';
                 counter++;
             }
         }
         notify(counter);
+        highlightCheckedJobs( sections );
+        saveCheckedJobsToStore( extractJobsFromElementsArray(sections) );
     }
 
-    function callback(data) {
+    function callback(mutations) {
         if(!container){
             return;
         }
 
-        var counter = 0, elements, elem, i , i2;
+        let counter = 0, elements;
+        const sections = [];
 
-        for(i = 0; i< data.length; i++){
-            elements = data[i].addedNodes;
+        for(let mutation of mutations){
+            elements = mutation.addedNodes;
 
-            for(i2 = 0; i2< elements.length; i2++){
-                if(elements[i2].tagName !== 'SECTION'){
+            for(let element of elements){
+                if(element.tagName !== 'SECTION'){
                     continue;
                 }
-                elem = elements[i2].querySelector('.client-location');
-                if(!elem){
-                    console.log(elements[i2]);
+                sections.push(element);
+                let location = element.querySelector('.client-location');
+                if(!location){
+                    console.log(element);
                 }
-                else if( filters.indexOf(elem.textContent) >= 0 ){
-                    elements[i2].style.display = 'none';
+                else if( FILTERS.indexOf(location.textContent) >= 0 ){
+                    element.style.display = 'none';
                     counter++;
                 }
             }
         }
 
         notify(counter);
+        highlightCheckedJobs( sections );
+        saveCheckedJobsToStore( extractJobsFromElementsArray(sections) );
     }
 
     function init() {
-        container = doc.getElementById('feed-jobs');
+        container = document.getElementById('feed-jobs');
         if(container) {
-            clean();
-            var observer = new MutationObserver(callback);
+            cleanOnFirstLoad();
+            const observer = new MutationObserver(callback);
             observer.observe(container, {childList: true});
         }
         else {
@@ -70,7 +70,7 @@
     }
 
     function applyCSS(elem, props){
-        for(var prop in props){
+        for(let prop in props){
             if(props.hasOwnProperty(prop)){
                 elem.style[prop] = props[prop];
             }
@@ -78,24 +78,24 @@
     }
 
     function notify(number){
-        var text = 'Cleaned '+number+' posts in job feed';
+        const text = 'Cleaned '+number+' posts in job feed';
 
-        var message = document.createElement('div');
+        const message = document.createElement('div');
         message.innerHTML = text;
         applyCSS(message, {
             padding: '10px',
             fontSize: '20px'
         });
 
-        var sign = document.createElement('div');
-        sign.innerHTML = extensionName;
+        const sign = document.createElement('div');
+        sign.innerHTML = EXTENSION_NAME;
         applyCSS(sign, {
             textAlign: 'right',
             color: '#999',
             fontSize: '10px'
         });
 
-        var popup = document.createElement('div');
+        const popup = document.createElement('div');
         popup.appendChild(message);
         popup.appendChild(sign);
         popup.classList.add('UpworkCleanerPopup');
@@ -110,10 +110,51 @@
         });
         document.body.appendChild(popup);
 
-        setTimeout(function(popup){ popup.remove(); }, 5000, popup);
+        setTimeout(function(popup){ popup.remove(); }, POPUP_VISIBILITY_DURATION, popup);
 
-        console.log(extensionName + ': ' + text);
+        console.log(EXTENSION_NAME + ': ' + text);
+    }
+
+    function getCheckedJobsFromStore(){
+        const stored = localStorage.getItem('checkedJobs');
+        return stored ? JSON.parse(stored) : [];
+    }
+
+    function saveCheckedJobsToStore(jobs){
+        const stored = getCheckedJobsFromStore();
+        localStorage.setItem('checkedJobs', JSON.stringify(stored.concat(jobs)));
+    }
+
+    function extractJobsFromElementsArray(elements){
+        const result = [];
+        let id;
+        for(let element of elements){
+            id = extractIdFromSection(element);
+            if(!id){
+                console.warn(EXTENSION_NAME + ': not found link in ', element);
+            } else {
+                result.push( id );
+            }
+        }
+        return result;
+    }
+
+    function extractIdFromSection(section){
+        const link = section.querySelector('.job-title-link');
+        return link && link.href ? link.href.split('_~')[1].slice(0,-1) : null;
+    }
+
+    function highlightCheckedJobs(sections){
+        const checkedJobs = getCheckedJobsFromStore();
+        for(let section of sections){
+            let sectionId = extractIdFromSection(section);
+            if( checkedJobs.indexOf(sectionId) >= 0 ){
+                applyCSS(section,{
+                    backgroundColor: CHECKED_JOB_COLOR
+                });
+            }
+        }
     }
 
     init();
-})(document);
+})();

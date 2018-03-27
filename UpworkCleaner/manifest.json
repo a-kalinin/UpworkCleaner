@@ -16,7 +16,7 @@
               "https://www.upwork.com/ab/find-work/*"
             ],
             "js": [ "content_scripts/main.js"],
-            "run_at": "document_start"
+            "run_at": "document_end"
         }
     ],
     "permissions": [
