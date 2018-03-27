@@ -3,7 +3,8 @@
     const FILTERS = ['India', 'Pakistan'],
         POPUP_VISIBILITY_DURATION = 3000,
         EXTENSION_NAME = 'UpworkCleaner',
-        CHECKED_JOB_COLOR = '#eee';
+        CHECKED_JOB_COLOR = '#eee',
+        NUMBER_OF_JOBS_IN_MEMORY = 3000;
 
     let container;
 
@@ -121,8 +122,9 @@
     }
 
     function saveCheckedJobsToStore(jobs){
-        const stored = getCheckedJobsFromStore();
-        localStorage.setItem('checkedJobs', JSON.stringify(stored.concat(jobs)));
+        const stored = getCheckedJobsFromStore(),
+            toStore = stored.concat(jobs).slice(-NUMBER_OF_JOBS_IN_MEMORY);
+        localStorage.setItem('checkedJobs', JSON.stringify(toStore));
     }
 
     function extractJobsFromElementsArray(elements){
