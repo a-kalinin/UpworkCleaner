@@ -1,22 +1,31 @@
 (function(){
 
-    const FILTERS = ['India', 'Pakistan'],
-        POPUP_VISIBILITY_DURATION = 3000,
-        EXTENSION_NAME = 'UpworkCleaner',
+    const POPUP_VISIBILITY_DURATION = 3000,
+        EXTENSION_NAME = 'Upwork Cleaner',
         CHECKED_JOB_COLOR = '#eee',
-        NUMBER_OF_JOBS_IN_MEMORY = 3000;
+        NUMBER_OF_JOBS_IN_MEMORY = 3000,
+        STORAGE_PROP_NAME_FOR_CHECKED_JOBS = '_UpworkCleaner_checkedJobs',
+        STORAGE_PROP_FOR_COUNTRIES = 'countries_filter';
 
-    let container;
+    let filters,
+        container,
+        previousLoadedSections = [];
+
+    function getFilters(callback){
+        chrome.storage.sync.get([STORAGE_PROP_FOR_COUNTRIES], function(result){
+            callback( result[STORAGE_PROP_FOR_COUNTRIES] || [] );
+        });
+    }
 
     function cleanOnFirstLoad(){
         if(!container){
             return;
         }
-        const sections = Array.from(container.querySelectorAll('section')),
+        const sections = Array.from(container.children).filter(elem => elem.tagName==='SECTION'),
             array = sections.map(elem => {return {elem, location: elem.querySelector('.client-location')};});
         let counter = 0;
         for(let item of array){
-            if( item.location && FILTERS.indexOf(item.location.textContent) >= 0 ){
+            if( item.location && filters.indexOf(item.location.textContent) >= 0 ){
                 item.elem.style.display = 'none';
                 counter++;
             }
@@ -24,6 +33,7 @@
         notify(counter);
         highlightCheckedJobs( sections );
         saveCheckedJobsToStore( extractJobsFromElementsArray(sections) );
+        previousLoadedSections = sections;
     }
 
     function callback(mutations) {
@@ -43,10 +53,7 @@
                 }
                 sections.push(element);
                 let location = element.querySelector('.client-location');
-                if(!location){
-                    console.log(element);
-                }
-                else if( FILTERS.indexOf(location.textContent) >= 0 ){
+                if( location && filters.indexOf(location.textContent) >= 0 ){
                     element.style.display = 'none';
                     counter++;
                 }
@@ -54,13 +61,15 @@
         }
 
         notify(counter);
-        highlightCheckedJobs( sections );
+        highlightCheckedJobs( previousLoadedSections.concat(sections));
         saveCheckedJobsToStore( extractJobsFromElementsArray(sections) );
+        previousLoadedSections = sections;
     }
 
     function init() {
-        container = document.getElementById('feed-jobs');
-        if(container) {
+        getFilters(results => filters = results);
+        container = container || document.getElementById('feed-jobs');
+        if(filters && container) {
             cleanOnFirstLoad();
             const observer = new MutationObserver(callback);
             observer.observe(container, {childList: true});
@@ -117,14 +126,14 @@
     }
 
     function getCheckedJobsFromStore(){
-        const stored = localStorage.getItem('checkedJobs');
+        const stored = localStorage.getItem(STORAGE_PROP_NAME_FOR_CHECKED_JOBS);
         return stored ? JSON.parse(stored) : [];
     }
 
     function saveCheckedJobsToStore(jobs){
         const stored = getCheckedJobsFromStore(),
             toStore = stored.concat(jobs).slice(-NUMBER_OF_JOBS_IN_MEMORY);
-        localStorage.setItem('checkedJobs', JSON.stringify(toStore));
+        localStorage.setItem(STORAGE_PROP_NAME_FOR_CHECKED_JOBS, JSON.stringify(toStore));
     }
 
     function extractJobsFromElementsArray(elements){
@@ -151,7 +160,7 @@
         for(let section of sections){
             let sectionId = extractIdFromSection(section);
             if( checkedJobs.indexOf(sectionId) >= 0 ){
-                applyCSS(section,{
+                applyCSS(section, {
                     backgroundColor: CHECKED_JOB_COLOR
                 });
             }
