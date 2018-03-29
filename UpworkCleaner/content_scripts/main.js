@@ -66,6 +66,35 @@
         previousLoadedSections = sections;
     }
 
+    function onExtensionMessage(request, sender, sendResponse){
+        if (request.action === "cleanHistory"){
+            localStorage.removeItem(STORAGE_PROP_NAME_FOR_CHECKED_JOBS);
+            removeCheckedMarks();
+            sendResponse({done:true});
+        } else if (request.action === "updateFilters"){
+            filters = request.filters;
+            removeFilteredMarks();
+            cleanOnFirstLoad();
+            sendResponse({done:true});
+        }
+    }
+
+    function removeFilteredMarks(){
+        const sections = Array.from(container.children).filter(elem => elem.tagName==='SECTION');
+        for (let section of sections){
+            section.style.display = '';
+            section.style.backgroundColor = '';
+        }
+    }
+
+    function removeCheckedMarks(){
+        const sections = Array.from(container.children).filter(elem => elem.tagName==='SECTION');
+        for (let section of sections){
+            section.style.display = '';
+            section.style.backgroundColor = '';
+        }
+    }
+
     function init() {
         getFilters(results => filters = results);
         container = container || document.getElementById('feed-jobs');
@@ -73,6 +102,7 @@
             cleanOnFirstLoad();
             const observer = new MutationObserver(callback);
             observer.observe(container, {childList: true});
+            chrome.runtime.onMessage.addListener( onExtensionMessage );
         }
         else {
             setTimeout(init, 300);

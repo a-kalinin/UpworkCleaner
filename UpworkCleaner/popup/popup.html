@@ -31,12 +31,23 @@
       width: 25px;
       margin-left: 5px;
     }
+    #cleanHistoryWrapper{
+      padding: 5px;
+      border-top: 1px solid #ccc;
+      text-align: center;
+    }
+    #cleanHistory{
+      padding: 10px;
+    }
   </style>
   </head>
   <body>
     <h3>Upwork cleaner</h3>
     <div>To filter the job feed enter the countries names below:</div>
     <div id="countries"></div>
+    <div id="cleanHistoryWrapper">
+      <button id="cleanHistory">Clean history of viewed jobs</button>
+    </div>
     <script src="popup.js"></script>
   </body>
 </html>

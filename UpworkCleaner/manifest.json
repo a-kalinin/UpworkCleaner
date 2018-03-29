@@ -22,7 +22,8 @@
     ],
     "permissions": [
       "https://www.upwork.com/ab/find-work/*",
-      "storage"
+      "storage",
+      "tabs"
     ],
     "browser_action": {
           "default_icon": {
