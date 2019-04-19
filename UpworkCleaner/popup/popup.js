@@ -72,7 +72,8 @@
     }
 
     function addNewInput(container, value) {
-        const form = document.createElement('form'), input = document.createElement('input'),
+        const form = document.createElement('form'),
+            input = document.createElement('input'),
             button = document.createElement('input');
         input.name = 'name';
         button.type = 'submit';

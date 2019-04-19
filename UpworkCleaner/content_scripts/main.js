@@ -5,7 +5,8 @@
         CHECKED_JOB_COLOR = '#eee',
         NUMBER_OF_JOBS_IN_MEMORY = 3000,
         STORAGE_PROP_NAME_FOR_CHECKED_JOBS = '_UpworkCleaner_checkedJobs',
-        STORAGE_PROP_FOR_COUNTRIES = 'countries_filter';
+        STORAGE_PROP_FOR_COUNTRIES = 'countries_filter',
+        CLIENT_LOCATION_SELECTOR = '.client-location';
 
     let filters,
         container,
@@ -52,7 +53,7 @@
                     continue;
                 }
                 sections.push(element);
-                let location = element.querySelector('.client-location');
+                let location = element.querySelector(CLIENT_LOCATION_SELECTOR);
                 if( location && filters.indexOf(location.textContent) >= 0 ){
                     element.style.display = 'none';
                     counter++;
