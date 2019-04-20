@@ -16,11 +16,17 @@
       [COUNTRIES_ID]: 'countries',
       [TITLES_ID]: 'titles',
     },
+    forms: {
+      'add_country_form': COUNTRIES_ID,
+      'add_title_form': TITLES_ID,
+    },
   };
 
   function onPageLoad() {
     buildFilters();
-    document.getElementById('cleanHistory').addEventListener('click', ()=> cleanHistory() )
+    document.getElementById('cleanHistory').addEventListener('click', ()=> cleanHistory());
+    document.getElementById('add_country_form').addEventListener('submit', formSubmit);
+    document.getElementById('add_title_form').addEventListener('submit', formSubmit);
   }
 
   function buildFilters(filters) {
@@ -31,10 +37,9 @@
         container.innerHTML = '';
         if (filters) {
           for (let filter of filters) {
-            addNewInput(container, filter, filterType);
+            addNewChip(container, filter, filterType);
           }
         }
-        addNewInput(container, null, filterType);
       });
     };
 
@@ -102,37 +107,35 @@
     });
   }
 
-  function addNewInput(container, value, filterType) {
-    const form = document.createElement('form'),
-      input = document.createElement('input'),
-      button = document.createElement('input');
-    input.name = 'name';
-    button.type = 'submit';
-    if (value) {
-      input.readOnly = true;
-      input.value = value;
-      button.value = '-';
-      form.addEventListener('submit', event => {
-        event.preventDefault();
-        removeFilter(event.target.elements.name.value, filterType);
-      });
-    } else {
-      const filterNameMap = {
-        [COUNTRIES_ID]: 'country',
-        [TITLES_ID]: 'title',
-      };
-      input.placeholder = `Add ${filterNameMap[filterType]} filter`;
-      button.value = '+';
-      form.addEventListener('submit', event => {
-        event.preventDefault();
-        const value = event.target.elements.name.value;
-        value && addFilter(value, filterType);
-      });
-    }
-    form.classList.add('inputWrapper');
-    form.appendChild(input);
-    form.appendChild(button);
-    container.appendChild(form);
+  function formSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const type = filtersMap.forms[form.id];
+
+    if (!type) return;
+
+    const value = form.elements.name.value;
+    if (value) addFilter(value, type);
+  }
+
+  function addNewChip(container, value, filterType) {
+    const wrapper = document.createElement('span'),
+      content = document.createElement('span'),
+      button = document.createElement('button');
+
+    wrapper.className = 'chip';
+    content.className = 'chipContent';
+    content.innerText = value;
+    button.className = 'chipButton';
+    button.type = 'button';
+    button.addEventListener('click', () => {
+      console.log(value);
+      removeFilter(value, filterType);
+    });
+
+    wrapper.appendChild(content);
+    wrapper.appendChild(button);
+    container.appendChild(wrapper);
   }
 
   function cleanHistory(){

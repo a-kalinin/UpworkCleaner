@@ -12,13 +12,21 @@
         <h3>Location filter</h3>
         <div>To filter the job feed enter the countries names blacklist below:</div>
         <div class="hint">Exact full string matching</div>
-        <div id="countries" class="input-list"></div>
+        <div id="countries" class="inputList"></div>
+        <form id="add_country_form" class="inputWrapper">
+          <input name="name" placeholder="Add country filter"/>
+          <input type="submit" value="+"/>
+        </form>
       </section>
       <section class="last">
         <h3>Title filter</h3>
         <div>To filter the job feed enter word in blacklist below:</div>
         <div class="hint">Exact title's part matching to listed words/phrases (case-insensitive)</div>
-        <div id="titles" class="input-list"></div>
+        <div id="titles" class="inputList"></div>
+        <form id="add_title_form" class="inputWrapper">
+          <input name="name" placeholder="Add title filter"/>
+          <input type="submit" value="+"/>
+        </form>
       </section>
     </div>
     <section>
