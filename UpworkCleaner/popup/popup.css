@@ -3,29 +3,31 @@
  rgb(0,150,136)
  */
 body{
-  width: 550px;
+  width: 600px;
   font-size: 14px;
   padding: 10px;
 }
 
-input[type="submit"],
 button{
   outline: none;
   border: none;
   border-radius: 2px;
-  background: rgb(0,150,136);;
+  background: rgb(0,150,136);
+  transition: background 0.8s;
   color: rgb(255,255,255);
-  box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.2), 0 1px 5px 0 rgba(0,0,0,.12);
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,.14),
+              0 3px 1px -2px rgba(0,0,0,.2),
+              0 1px 5px 0 rgba(0,0,0,.12);
+}
+button:active{
+  box-shadow: 0 4px 5px 0 rgba(0,0,0,.14),
+  0 1px 10px 0 rgba(0,0,0,.12),
+  0 2px 4px -1px rgba(0,0,0,.2);
 }
 
 h2{
   margin: 0 0 10px 0;
   text-align: center;
-}
-
-input[type="submit"]:active,
-button:active{
-  box-shadow: 0 4px 5px 0 rgba(0,0,0,.14), 0 1px 10px 0 rgba(0,0,0,.12), 0 2px 4px -1px rgba(0,0,0,.2);
 }
 
 .hint{
@@ -40,8 +42,8 @@ button:active{
 #content > *{
   border-right: 1px solid #ccc;
   padding: 0 10px;
-  /*border-right: 2px solid #ccc;*/
-  /*border-right: 2px solid #3f51b5;*/
+  width: 50%;
+  flex: 1 1;
 }
 
 #content > :first-child{
@@ -85,9 +87,6 @@ button:active{
 }
 
 .chipButton{
-  vertical-align: middle;
-  overflow: hidden;
-  text-align: center;
   margin-left: 5px;
   position: relative;
   width: 20px;
@@ -95,6 +94,8 @@ button:active{
   border-radius: 50%;
   background-color: rgb(0,150,136);
 }
+.formButton:after,
+.formButton:before,
 .chipButton:after,
 .chipButton:before{
   content: '';
@@ -112,29 +113,38 @@ button:active{
 .chipButton:after{
   transform: translate(-50%, -50%) rotate(-45deg);
 }
+.formButton:before{
+  transform: translate(-50%, -50%);
+}
+.formButton:after{
+  transform: translate(-50%, -50%) rotate(90deg);
+}
 
-.inputWrapper{
+.addFilterForm{
   display: flex;
   padding: 10px 0 0;
-  margin: 0;
+  margin: auto 0 0;
 }
-.inputWrapper input[name="name"]{
+.addFilterForm input[name="name"]{
   padding: 5px;
   border: 1px solid #ddd;
   height: 30px;
   width: calc(100% - 40px);
 }
-.inputWrapper input[name="name"][readonly]{
-  background-color: #eee;
+.addFilterForm.duplicated .formButton{
+  transition: none;
+  background-color: red;
 }
-.inputWrapper input[type="submit"]{
+.formButton{
+  position: relative;
   width: 30px;
   margin-left: 10px;
   height: 30px;
 }
 
 section{
-  padding: 10px 0 0;
+  display: flex;
+  flex-direction: column;
 }
 
 section h3{
@@ -142,6 +152,7 @@ section h3{
 }
 
 #cleanHistory{
+  margin-top: 20px;
   padding: 10px;
   width: 100%;
   height: 50px;

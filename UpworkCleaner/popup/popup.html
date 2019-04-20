@@ -13,24 +13,24 @@
         <div>To filter the job feed enter the countries names blacklist below:</div>
         <div class="hint">Exact full string matching</div>
         <div id="countries" class="inputList"></div>
-        <form id="add_country_form" class="inputWrapper">
+        <form id="add_country_form" class="addFilterForm">
           <input name="name" placeholder="Add country filter"/>
-          <input type="submit" value="+"/>
+          <button class="formButton"></button>
         </form>
       </section>
       <section class="last">
         <h3>Title filter</h3>
         <div>To filter the job feed enter word in blacklist below:</div>
-        <div class="hint">Exact title's part matching to listed words/phrases (case-insensitive)</div>
+        <div class="hint">Title's part matching to listed words/phrases</div>
         <div id="titles" class="inputList"></div>
-        <form id="add_title_form" class="inputWrapper">
+        <form id="add_title_form" class="addFilterForm">
           <input name="name" placeholder="Add title filter"/>
-          <input type="submit" value="+"/>
+          <button class="formButton"></button>
         </form>
       </section>
     </div>
     <section>
-      <button id="cleanHistory">Clean history of viewed jobs</button>
+      <button id="cleanHistory">Clean history of viewed jobs <i>(all viewed jobs will become white again)</i></button>
     </section>
   </body>
   <script src="popup.js"></script>

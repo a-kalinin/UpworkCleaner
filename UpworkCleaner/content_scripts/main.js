@@ -20,6 +20,10 @@
     [STORAGE_PROP_COUNTRIES]: (content) => {
       const currentFilters = filters[STORAGE_PROP_COUNTRIES];
       if (currentFilters && currentFilters.length) {
+        return Boolean(filters[STORAGE_PROP_COUNTRIES].find(filter => {
+          const RE = new RegExp(`^${filter}$`, 'i');
+          return RE.test(content);
+        }));
         return filters[STORAGE_PROP_COUNTRIES].indexOf(content) >= 0;
       }
       return false
@@ -188,7 +192,7 @@
   }
 
   function notify(number){
-    const text = 'Cleaned '+number+' posts in job feed';
+    const text = 'Cleaned '+number+' posts in job feed totally';
 
     const message = document.createElement('div');
     message.innerHTML = text;

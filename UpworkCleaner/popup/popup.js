@@ -21,6 +21,7 @@
       'add_title_form': TITLES_ID,
     },
   };
+  let currentFilters;
 
   function onPageLoad() {
     buildFilters();
@@ -41,6 +42,7 @@
           }
         }
       });
+      currentFilters = allFilters;
     };
 
     if (filters) {
@@ -115,7 +117,16 @@
     if (!type) return;
 
     const value = form.elements.name.value;
-    if (value) addFilter(value, type);
+    const filters = currentFilters[filtersMap.storage[type]];
+    const notYetPresent = currentFilters
+      && !filters.find(item => item.toLowerCase() === value.toLowerCase());
+    if (value && notYetPresent) {
+      addFilter(value, type);
+      form.elements.name.value = '';
+    } else if (value) {
+      form.classList.add('duplicated');
+      setTimeout(() => { form.classList.remove('duplicated'); }, 50)
+    }
   }
 
   function addNewChip(container, value, filterType) {
