@@ -102,8 +102,7 @@
     getFilters(function (allFilters) {
       const storageId = filtersMap.storage[filterType];
       const filters = allFilters[storageId] || [];
-      const newFilters = filters.concat([filter]);
-      const updatedAllFilters = { ...allFilters, [storageId]: newFilters };
+      const updatedAllFilters = { ...allFilters, [storageId]: [...filters, filter] };
       saveFilters(updatedAllFilters);
       buildFilters(updatedAllFilters);
     });
@@ -117,7 +116,7 @@
     if (!type) return;
 
     const value = form.elements.name.value;
-    const filters = currentFilters[filtersMap.storage[type]];
+    const filters = currentFilters[filtersMap.storage[type]] || [];
     const notYetPresent = currentFilters
       && !filters.find(item => item.toLowerCase() === value.toLowerCase());
     if (value && notYetPresent) {
@@ -125,7 +124,7 @@
       form.elements.name.value = '';
     } else if (value) {
       form.classList.add('duplicated');
-      setTimeout(() => { form.classList.remove('duplicated'); }, 50)
+      setTimeout(() => { form.classList.remove('duplicated'); }, 50);
     }
   }
 
