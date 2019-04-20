@@ -5,16 +5,46 @@
     CHECKED_JOB_COLOR = '#eee',
     NUMBER_OF_JOBS_IN_MEMORY = 3000,
     STORAGE_PROP_NAME_FOR_CHECKED_JOBS = '_UpworkCleaner_checkedJobs',
-    STORAGE_PROP_FOR_COUNTRIES = 'countries_filter',
+    STORAGE_PROP_COUNTRIES = 'countries_filter',
+    STORAGE_PROP_TITLES = 'titles_filter',
+    TITLE_SELECTOR = '.job-title-link',
     CLIENT_LOCATION_SELECTOR = '.client-location';
 
   let filters,
+    layoutContainer,
     container,
     previousLoadedSections = [];
 
+  const filtersTypes = [STORAGE_PROP_COUNTRIES, STORAGE_PROP_TITLES];
+  const filterFn = {
+    [STORAGE_PROP_COUNTRIES]: (content) => {
+      const currentFilters = filters[STORAGE_PROP_COUNTRIES];
+      if (currentFilters && currentFilters.length) {
+        return filters[STORAGE_PROP_COUNTRIES].indexOf(content) >= 0;
+      }
+      return false
+    },
+    [STORAGE_PROP_TITLES]: (content) => {
+      const currentFilters = filters[STORAGE_PROP_TITLES];
+      if (currentFilters && currentFilters.length) {
+        return Boolean(filters[STORAGE_PROP_TITLES].find(filter => {
+          const RE = new RegExp(`^${filter}$|^${filter}\\W|\\W${filter}\\W|\\W${filter}$`, 'i');
+          return RE.test(content);
+        }));
+      }
+      return false
+    },
+  }
+
+
   function getFilters(callback){
-    chrome.storage.sync.get([STORAGE_PROP_FOR_COUNTRIES], function(result){
-      callback( result[STORAGE_PROP_FOR_COUNTRIES] || [] );
+    chrome.storage.sync.get(filtersTypes, function(result){
+      const data = filtersTypes.reduce((acc, item) => ({
+        ...acc,
+        [item]: result[item] || [],
+      }), {});
+      console.log('getFilters', result);
+      callback(data);
     });
   }
 
@@ -22,12 +52,10 @@
     if(!container){
       return;
     }
-    const sections = Array.from(container.children).filter(elem => elem.tagName==='SECTION'),
-      array = sections.map(elem => {return {elem, location: elem.querySelector('.client-location')};});
+    const sections = Array.from(container.children).filter(elem => elem.tagName==='SECTION');
     let counter = 0;
-    for(let item of array){
-      if( item.location && filters.indexOf(item.location.textContent) >= 0 ){
-        item.elem.style.display = 'none';
+    for(let item of sections){
+      if(checkElement(item)){
         counter++;
       }
     }
@@ -37,58 +65,89 @@
     previousLoadedSections = sections;
   }
 
-  function callback(mutations) {
+  function checkElement(element) {
+    const locationEl = element.querySelector(CLIENT_LOCATION_SELECTOR);
+    const titleEl = element.querySelector(TITLE_SELECTOR);
+    const containsFilteredLocation =
+      locationEl && filterFn[STORAGE_PROP_COUNTRIES](locationEl.textContent);
+    const containsFilteredTitle = titleEl && filterFn[STORAGE_PROP_TITLES](titleEl.textContent);
+
+    if(containsFilteredLocation || containsFilteredTitle){
+      element.style.display = 'none';
+      return true;
+    }
+
+    return false;
+  }
+
+  function mutationObserverCallback(mutations) {
     if(!container){
       return;
     }
 
-    let counter = 0, elements;
-    const sections = [];
+    const addedSections = [];
+    let counter = 0;
 
     for(let mutation of mutations){
-      elements = mutation.addedNodes;
-
-      for(let element of elements){
-        if(element.tagName !== 'SECTION'){
-          continue;
-        }
-        sections.push(element);
-        let location = element.querySelector(CLIENT_LOCATION_SELECTOR);
-        if( location && filters.indexOf(location.textContent) >= 0 ){
-          element.style.display = 'none';
-          counter++;
-        }
-      }
+      const { addedNodes } = mutation;
+      const sections = addedNodes.filter(node => node.tagName === 'SECTION');
+      addedSections.push(...sections);
+      counter += sections.length;
     }
 
     notify(counter);
-    highlightCheckedJobs( previousLoadedSections.concat(sections));
-    saveCheckedJobsToStore( extractJobsFromElementsArray(sections) );
-    previousLoadedSections = sections;
+    highlightCheckedJobs( previousLoadedSections.concat(addedSections));
+    saveCheckedJobsToStore( extractJobsFromElementsArray(addedSections) );
+    previousLoadedSections = addedSections;
+  }
+
+  function layoutMutationObserverCallback(mutations) {
+    if(!layoutContainer){
+      return;
+    }
+
+    for(let mutation of mutations){
+      const { removedNodes } = mutation;
+      if (Array.from(removedNodes).length > 0) {
+        const newContainer = document.getElementById('feed-jobs')
+          || document.getElementById('feed-jobs-responsive');
+
+        if (newContainer !== container) {
+          container = container
+            || document.getElementById('feed-jobs')
+            || document.getElementById('feed-jobs-responsive');
+          cleanAppliedStyles();
+          cleanOnFirstLoad();
+        }
+
+      }
+    }
   }
 
   function onExtensionMessage(request, sender, sendResponse){
-    if (request.action === "cleanHistory"){
-      localStorage.removeItem(STORAGE_PROP_NAME_FOR_CHECKED_JOBS);
-      removeCheckedMarks();
-      sendResponse({done:true});
-    } else if (request.action === "updateFilters"){
-      filters = request.filters;
-      removeFilteredMarks();
-      cleanOnFirstLoad();
-      sendResponse({done:true});
+    try {
+      switch (request.action) {
+        case "cleanHistory":
+          localStorage.removeItem(STORAGE_PROP_NAME_FOR_CHECKED_JOBS);
+          cleanAppliedStyles();
+          break;
+
+        case "updateFilters":
+          filters = request.filters;
+          cleanAppliedStyles();
+          cleanOnFirstLoad();
+          break;
+
+        default:
+          break;
+      }
+      sendResponse({ done: true });
+    } catch (e) {
+      sendResponse({ done: false, error: e.message });
     }
   }
 
-  function removeFilteredMarks(){
-    const sections = Array.from(container.children).filter(elem => elem.tagName==='SECTION');
-    for (let section of sections){
-      section.style.display = '';
-      section.style.backgroundColor = '';
-    }
-  }
-
-  function removeCheckedMarks(){
+  function cleanAppliedStyles(){
     const sections = Array.from(container.children).filter(elem => elem.tagName==='SECTION');
     for (let section of sections){
       section.style.display = '';
@@ -98,10 +157,20 @@
 
   function init() {
     getFilters(results => filters = results);
-    container = container || document.getElementById('feed-jobs');
+
+    if (!layoutContainer) {
+      layoutContainer = document.getElementById('layout');
+      const observerLayout = new MutationObserver(layoutMutationObserverCallback);
+      observerLayout.observe(layoutContainer, {childList: true});
+    }
+
+    container = container
+      || document.getElementById('feed-jobs')
+      || document.getElementById('feed-jobs-responsive');
+
     if(filters && container) {
       cleanOnFirstLoad();
-      const observer = new MutationObserver(callback);
+      const observer = new MutationObserver(mutationObserverCallback);
       observer.observe(container, {childList: true});
       chrome.runtime.onMessage.addListener( onExtensionMessage );
     }

@@ -3,78 +3,27 @@
   <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
   <title></title>
-  <style>
-    /*
-     #3f51b5
-     rgb(0,150,136)
-     */
-    body{
-      width: 250px;
-      font-size: 14px;
-      padding: 10px;
-    }
-
-    input[type="submit"],
-    button{
-      outline: none;
-      border: none;
-      border-radius: 2px;
-      background: rgb(0,150,136);;
-      color: rgb(255,255,255);
-      box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.2), 0 1px 5px 0 rgba(0,0,0,.12);
-    }
-
-    input[type="submit"]:active,
-    button:active{
-      box-shadow: 0 4px 5px 0 rgba(0,0,0,.14), 0 1px 10px 0 rgba(0,0,0,.12), 0 2px 4px -1px rgba(0,0,0,.2);
-    }
-
-    #countries{
-      /*padding: 5px;*/
-      /*border-bottom: 1px solid #999;*/
-    }
-    .inputWrapper{
-      display: block;
-      padding: 10px 0;
-      border-bottom: 1px solid #ccc;
-      margin: 0;
-    }
-    .inputWrapper:last-child{
-      border-bottom:none;
-    }
-    .inputWrapper input[name="name"]{
-      padding: 5px;
-      border: 1px solid #ddd;
-      height: 30px;
-      width: calc(100% - 40px);
-    }
-    .inputWrapper input[name="name"][readonly]{
-      background-color: #eee;
-    }
-    .inputWrapper input[type="submit"]{
-      width: 30px;
-      margin-left: 10px;
-      height: 30px;
-    }
-    #cleanHistoryWrapper{
-      padding: 10px 0 0;
-      border-top: 1px solid #ccc;
-      text-align: center;
-    }
-    #cleanHistory{
-      padding: 10px;
-      width: 100%;
-      height: 50px;
-    }
-  </style>
+  <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <h3>Upwork cleaner</h3>
-    <div>To filter the job feed enter the countries names below:</div>
-    <div id="countries"></div>
-    <div id="cleanHistoryWrapper">
-      <button id="cleanHistory">Clean history of viewed jobs</button>
+    <h2>Upwork cleaner</h2>
+    <div id="content">
+      <section>
+        <h3>Location filter</h3>
+        <div>To filter the job feed enter the countries names blacklist below:</div>
+        <div class="hint">Exact full string matching</div>
+        <div id="countries" class="input-list"></div>
+      </section>
+      <section class="last">
+        <h3>Title filter</h3>
+        <div>To filter the job feed enter word in blacklist below:</div>
+        <div class="hint">Exact title's part matching to listed words/phrases (case-insensitive)</div>
+        <div id="titles" class="input-list"></div>
+      </section>
     </div>
-    <script src="popup.js"></script>
+    <section>
+      <button id="cleanHistory">Clean history of viewed jobs</button>
+    </section>
   </body>
+  <script src="popup.js"></script>
 </html>

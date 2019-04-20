@@ -1,0 +1,104 @@
+/*
+ #3f51b5
+ rgb(0,150,136)
+ */
+body{
+  width: 550px;
+  font-size: 14px;
+  padding: 10px;
+}
+
+input[type="submit"],
+button{
+  outline: none;
+  border: none;
+  border-radius: 2px;
+  background: rgb(0,150,136);;
+  color: rgb(255,255,255);
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.2), 0 1px 5px 0 rgba(0,0,0,.12);
+}
+
+h2{
+  margin: 0 0 10px 0;
+  text-align: center;
+}
+
+input[type="submit"]:active,
+button:active{
+  box-shadow: 0 4px 5px 0 rgba(0,0,0,.14), 0 1px 10px 0 rgba(0,0,0,.12), 0 2px 4px -1px rgba(0,0,0,.2);
+}
+
+.hint{
+  color: #aaa;
+  font-size: 80%;
+}
+
+#content{
+  display: flex;
+}
+
+#content > *{
+  border-right: 1px solid #ccc;
+  padding: 0 10px;
+  /*border-right: 2px solid #ccc;*/
+  /*border-right: 2px solid #3f51b5;*/
+}
+
+#content > :first-child{
+  padding-left: 0;
+}
+
+#content > :last-child{
+  border-right: none;
+  padding-right: 0;
+}
+
+#countries{
+  /*padding: 5px;*/
+  /*border-bottom: 1px solid #999;*/
+}
+
+.inputWrapper{
+  display: block;
+  padding: 10px 0;
+  border-bottom: 1px solid #ccc;
+  /*border-bottom: 2px solid #ccc;*/
+  /*border-bottom: 2px solid #3f51b5;*/
+  margin: 0;
+}
+.inputWrapper:last-child{
+  border-bottom:none;
+  padding-bottom: 0;
+}
+.inputWrapper input[name="name"]{
+  padding: 5px;
+  border: 1px solid #ddd;
+  height: 30px;
+  width: calc(100% - 40px);
+}
+.inputWrapper input[name="name"][readonly]{
+  background-color: #eee;
+}
+.inputWrapper input[type="submit"]{
+  width: 30px;
+  margin-left: 10px;
+  height: 30px;
+}
+
+section{
+  padding: 10px 0 0;
+}
+
+section h3{
+  margin: 0 0 10px;
+}
+
+#cleanHistory{
+  padding: 10px;
+  width: 100%;
+  height: 50px;
+}
+
+#titles{
+
+}
