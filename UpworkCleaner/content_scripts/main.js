@@ -13,6 +13,7 @@
   let filters,
     layoutContainer,
     container,
+    lastNotifiedCount = 0,
     previousLoadedSections = [];
 
   const filtersTypes = [STORAGE_PROP_COUNTRIES, STORAGE_PROP_TITLES];
@@ -24,7 +25,6 @@
           const RE = new RegExp(`^${filter}$`, 'i');
           return RE.test(content);
         }));
-        return filters[STORAGE_PROP_COUNTRIES].indexOf(content) >= 0;
       }
       return false
     },
@@ -47,12 +47,11 @@
         ...acc,
         [item]: result[item] || [],
       }), {});
-      console.log('getFilters', result);
       callback(data);
     });
   }
 
-  function cleanOnFirstLoad(){
+  function processFeed(){
     if(!container){
       return;
     }
@@ -90,19 +89,16 @@
     }
 
     const addedSections = [];
-    let counter = 0;
 
     for(let mutation of mutations){
       const { addedNodes } = mutation;
-      const sections = addedNodes.filter(node => node.tagName === 'SECTION');
+      const sections = Array.from(addedNodes).filter(node => node.tagName === 'SECTION');
       addedSections.push(...sections);
-      counter += sections.length;
     }
 
-    notify(counter);
-    highlightCheckedJobs( previousLoadedSections.concat(addedSections));
-    saveCheckedJobsToStore( extractJobsFromElementsArray(addedSections) );
-    previousLoadedSections = addedSections;
+    if (addedSections.length > 0) {
+      processFeed();
+    }
   }
 
   function layoutMutationObserverCallback(mutations) {
@@ -120,8 +116,7 @@
           container = container
             || document.getElementById('feed-jobs')
             || document.getElementById('feed-jobs-responsive');
-          cleanAppliedStyles();
-          cleanOnFirstLoad();
+          processFeed();
         }
 
       }
@@ -139,7 +134,7 @@
         case "updateFilters":
           filters = request.filters;
           cleanAppliedStyles();
-          cleanOnFirstLoad();
+          processFeed();
           break;
 
         default:
@@ -173,7 +168,7 @@
       || document.getElementById('feed-jobs-responsive');
 
     if(filters && container) {
-      cleanOnFirstLoad();
+      processFeed();
       const observer = new MutationObserver(mutationObserverCallback);
       observer.observe(container, {childList: true});
       chrome.runtime.onMessage.addListener( onExtensionMessage );
@@ -193,6 +188,10 @@
 
   function notify(number){
     const text = 'Cleaned '+number+' posts in job feed totally';
+
+    if (number === lastNotifiedCount) return;
+
+    lastNotifiedCount = number;
 
     const message = document.createElement('div');
     message.innerHTML = text;
