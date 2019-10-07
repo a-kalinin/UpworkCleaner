@@ -40,7 +40,11 @@
       return false
     },
   };
+  const styleEntryForRemoved = document.createElement('style');
+  const styleEntryForColored = document.createElement('style');
 
+  document.head.appendChild(styleEntryForRemoved);
+  document.head.appendChild(styleEntryForColored);
 
   function getFilters(callback){
     chrome.storage.sync.get(filtersTypes, function(result){
@@ -56,14 +60,15 @@
     if(!container){
       return;
     }
-    const sections = Array.from(container.children).filter(elem => elem.tagName==='SECTION');
-    let counter = 0;
-    for(let item of sections){
-      if(checkElement(item)){
-        counter++;
+    const indices = [];
+    const sections = Array.from(container.children);
+    for(let i = 0; i < sections.length; i += 1){
+      if(checkElement(sections[i])){
+        indices.push(i);
       }
     }
-    notify(counter);
+    updateStyleEntry(indices, 'display: none !important;', styleEntryForRemoved);
+    notify(indices.length);
     highlightCheckedJobs( sections );
     saveCheckedJobsToStore( extractJobsFromElementsArray(sections) );
     previousLoadedSections = sections;
@@ -101,18 +106,23 @@
   }
 
   function checkElement(element) {
+    if (element.tagName !== 'SECTION') return false;
     const locationEl = element.querySelector(CLIENT_LOCATION_SELECTOR);
     const titleEl = element.querySelector(TITLE_SELECTOR);
     const containsFilteredLocation =
       locationEl && filterFn[STORAGE_PROP_COUNTRIES](locationEl.textContent);
     const containsFilteredTitle = titleEl && filterFn[STORAGE_PROP_TITLES](titleEl.textContent);
 
-    if(containsFilteredLocation || containsFilteredTitle){
-      element.style.display = 'none';
-      return true;
-    }
+    return Boolean(containsFilteredLocation || containsFilteredTitle);
+  }
 
-    return false;
+  function updateStyleEntry( indices, style, styleNode ) {
+    function selector(index) {
+      const i = index + 1;
+      return `#feed-jobs > *:nth-child(${i}), #feed-jobs-responsive > *:nth-child(${i}) `;
+    }
+    const selectors = indices.map(selector);
+    styleNode.innerHTML = `${selectors.join(',')} { ${style} }`;
   }
 
   function mutationObserverCallback(mutations) {
@@ -177,11 +187,8 @@
   }
 
   function cleanAppliedStyles(){
-    const sections = Array.from(container.children).filter(elem => elem.tagName==='SECTION');
-    for (let section of sections){
-      section.style.display = '';
-      section.style.backgroundColor = '';
-    }
+    styleEntryForColored.innerHTML = '';
+    styleEntryForRemoved.innerHTML = '';
   }
 
   function init() {
@@ -273,6 +280,7 @@
     const result = [];
     let id;
     for(let element of elements){
+      if (element.tagName !== 'SECTION') continue;
       id = extractIdFromSection(element);
       if(!id){
         console.warn(EXTENSION_NAME + ': not found link in ', element);
@@ -290,14 +298,15 @@
 
   function highlightCheckedJobs(sections){
     const checkedJobs = getCheckedJobsFromStore();
-    for(let section of sections){
-      let sectionId = extractIdFromSection(section);
-      if( checkedJobs.indexOf(sectionId) >= 0 ){
-        applyCSS(section, {
-          backgroundColor: CHECKED_JOB_COLOR
-        });
+    const indices = [];
+    for(let i = 0; i < sections.length; i += 1){
+      if (sections[i].tagName !== 'SECTION') continue;
+      let sectionId = extractIdFromSection(sections[i]);
+      if( checkedJobs.includes(sectionId) ){
+        indices.push(i);
       }
     }
+    updateStyleEntry(indices, `background-color: ${CHECKED_JOB_COLOR} !important;`, styleEntryForColored);
   }
 
   init();
