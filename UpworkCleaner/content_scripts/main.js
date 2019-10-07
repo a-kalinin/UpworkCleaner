@@ -4,6 +4,7 @@
     EXTENSION_NAME = 'Upwork Cleaner',
     CHECKED_JOB_COLOR = '#eee',
     NUMBER_OF_JOBS_IN_MEMORY = 3000,
+    DEBOUNCE_INTERVAL = 700,
     STORAGE_PROP_NAME_FOR_CHECKED_JOBS = '_UpworkCleaner_checkedJobs',
     STORAGE_PROP_COUNTRIES = 'countries_filter',
     STORAGE_PROP_TITLES = 'titles_filter',
@@ -38,7 +39,7 @@
       }
       return false
     },
-  }
+  };
 
 
   function getFilters(callback){
@@ -51,7 +52,7 @@
     });
   }
 
-  function processFeed(){
+  function processFeedRaw(){
     if(!container){
       return;
     }
@@ -66,6 +67,37 @@
     highlightCheckedJobs( sections );
     saveCheckedJobsToStore( extractJobsFromElementsArray(sections) );
     previousLoadedSections = sections;
+  }
+
+  const processFeed = debounce(processFeedRaw, DEBOUNCE_INTERVAL);
+
+  function debounce(func, interval) {
+    let timer = null;
+    let repeatOnEnd = false;
+    let argsToRepeat = null;
+
+    function frame() {
+      if (repeatOnEnd) {
+        repeatOnEnd = false;
+        timer = setTimeout(frame, interval);
+        func(...argsToRepeat);
+        argsToRepeat = null;
+      } else {
+        timer = null;
+      }
+    }
+
+    function debounced(...args) {
+      if (!timer){
+        timer = setTimeout(frame, interval);
+        func(...args);
+      } else {
+        repeatOnEnd = true;
+        argsToRepeat = args;
+      }
+    }
+
+    return debounced;
   }
 
   function checkElement(element) {
@@ -88,15 +120,15 @@
       return;
     }
 
-    const addedSections = [];
+    let addedCount = 0;
 
     for(let mutation of mutations){
       const { addedNodes } = mutation;
-      const sections = Array.from(addedNodes).filter(node => node.tagName === 'SECTION');
-      addedSections.push(...sections);
+      const anySectionAdded = Array.from(addedNodes).find(node => node.tagName === 'SECTION');
+      if (anySectionAdded) addedCount += 1;
     }
 
-    if (addedSections.length > 0) {
+    if (addedCount > 0) {
       processFeed();
     }
   }
@@ -113,9 +145,7 @@
           || document.getElementById('feed-jobs-responsive');
 
         if (newContainer !== container) {
-          container = container
-            || document.getElementById('feed-jobs')
-            || document.getElementById('feed-jobs-responsive');
+          container = container || newContainer;
           processFeed();
         }
 
